@@ -151,7 +151,7 @@ public class IpUtil {
 
     /**
      * Find first valid IP from local network card
-     *
+     * 查找第一个本地网络有效ip
      * @return first valid local IP
      */
     public static InetAddress getLocalAddress() {

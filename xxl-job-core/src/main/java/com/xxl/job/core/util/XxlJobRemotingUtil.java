@@ -23,6 +23,7 @@ public class XxlJobRemotingUtil {
 
 
     // trust-https start
+    // 对链接进行https配置（x509）
     private static void trustAllHosts(HttpsURLConnection connection) {
         try {
             SSLContext sc = SSLContext.getInstance("TLS");

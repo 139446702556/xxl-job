@@ -30,16 +30,18 @@ public class JobLogFileCleanThread {
     public void start(final long logRetentionDays){
 
         // limit min value
+        //日志保留时间不得小于3天
         if (logRetentionDays < 3 ) {
             return;
         }
-
+        // 启动线程，用于日志清理工作，清理超过保存天数的日志文件夹
         localThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 while (!toStop) {
                     try {
                         // clean log dir, over logRetentionDays
+                        //获取全部日志文件
                         File[] childDirs = new File(XxlJobFileAppender.getLogPath()).listFiles();
                         if (childDirs!=null && childDirs.length>0) {
 
@@ -55,14 +57,17 @@ public class JobLogFileCleanThread {
                             for (File childFile: childDirs) {
 
                                 // valid
+                                // 文件必须为目录
                                 if (!childFile.isDirectory()) {
                                     continue;
                                 }
+                                // 文件为时间格式命名
                                 if (childFile.getName().indexOf("-") == -1) {
                                     continue;
                                 }
 
                                 // file create date
+                                // 获取当前文件命名对应的日期
                                 Date logFileCreateDate = null;
                                 try {
                                     SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
@@ -73,7 +78,7 @@ public class JobLogFileCleanThread {
                                 if (logFileCreateDate == null) {
                                     continue;
                                 }
-
+                                // 判断当前文件是否在保存期中，不在则删除
                                 if ((todayDate.getTime()-logFileCreateDate.getTime()) >= logRetentionDays * (24 * 60 * 60 * 1000) ) {
                                     FileUtil.deleteRecursively(childFile);
                                 }
@@ -89,6 +94,7 @@ public class JobLogFileCleanThread {
                     }
 
                     try {
+                        // 一天执行一次
                         TimeUnit.DAYS.sleep(1);
                     } catch (InterruptedException e) {
                         if (!toStop) {

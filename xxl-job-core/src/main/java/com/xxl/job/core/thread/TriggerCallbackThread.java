@@ -33,6 +33,7 @@ public class TriggerCallbackThread {
 
     /**
      * job results callback queue
+     * job执行完成后需回调任务队列
      */
     private LinkedBlockingQueue<HandleCallbackParam> callBackQueue = new LinkedBlockingQueue<HandleCallbackParam>();
     public static void pushCallBack(HandleCallbackParam callback){
@@ -49,6 +50,7 @@ public class TriggerCallbackThread {
     public void start() {
 
         // valid
+        // 校验adminAddresses是否为空
         if (XxlJobExecutor.getAdminBizList() == null) {
             logger.warn(">>>>>>>>>>> xxl-job, executor callback config fail, adminAddresses is null.");
             return;
@@ -63,15 +65,19 @@ public class TriggerCallbackThread {
                 // normal callback
                 while(!toStop){
                     try {
+                        // 从队列中获取回调信息（任务调用完成时的信息，用于更新job log表中的对应信息）
                         HandleCallbackParam callback = getInstance().callBackQueue.take();
+                        // 有需要处理的回调信息
                         if (callback != null) {
 
                             // callback list param
+                            // 从队列中获取全部回调信息
                             List<HandleCallbackParam> callbackParamList = new ArrayList<HandleCallbackParam>();
                             int drainToNum = getInstance().callBackQueue.drainTo(callbackParamList);
                             callbackParamList.add(callback);
 
                             // callback, will retry if error
+                            // 执行回调函数
                             if (callbackParamList!=null && callbackParamList.size()>0) {
                                 doCallback(callbackParamList);
                             }
@@ -84,6 +90,7 @@ public class TriggerCallbackThread {
                 }
 
                 // last callback
+                // 在服务停止之前，对callback进行最后一批执行
                 try {
                     List<HandleCallbackParam> callbackParamList = new ArrayList<HandleCallbackParam>();
                     int drainToNum = getInstance().callBackQueue.drainTo(callbackParamList);
@@ -105,6 +112,7 @@ public class TriggerCallbackThread {
 
 
         // retry
+        // 监听callback执行失败的日志记录信息，并对其进行处理，重新进行callback调用
         triggerRetryCallbackThread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -118,6 +126,7 @@ public class TriggerCallbackThread {
 
                     }
                     try {
+                        // 休息三十秒
                         TimeUnit.SECONDS.sleep(RegistryConfig.BEAT_TIMEOUT);
                     } catch (InterruptedException e) {
                         if (!toStop) {
@@ -158,11 +167,13 @@ public class TriggerCallbackThread {
 
     /**
      * do callback, will retry if error
+     * 执行回调函数，在多个admin服务中选择一个可以执行正常的进行处理结果
      * @param callbackParamList
      */
     private void doCallback(List<HandleCallbackParam> callbackParamList){
         boolean callbackRet = false;
         // callback, will retry if error
+        // 遍历服务提供方，选择一个进行处理callback(任务执行结果信息)
         for (AdminBiz adminBiz: XxlJobExecutor.getAdminBizList()) {
             try {
                 ReturnT<String> callbackResult = adminBiz.callback(callbackParamList);
@@ -177,6 +188,7 @@ public class TriggerCallbackThread {
                 callbackLog(callbackParamList, "<br>----------- xxl-job job callback error, errorMsg:" + e.getMessage());
             }
         }
+        // 记录callback失败相关信息
         if (!callbackRet) {
             appendFailCallbackFile(callbackParamList);
         }

@@ -54,6 +54,7 @@ public class JobApiController {
         }
 
         // services mapping
+        // callback动作用于处理任务执行结果信息，并将其修改保存到db中
         if ("callback".equals(uri)) {
             List<HandleCallbackParam> callbackParamList = GsonTool.fromJson(data, List.class, HandleCallbackParam.class);
             return adminBiz.callback(callbackParamList);

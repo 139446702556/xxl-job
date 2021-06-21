@@ -99,6 +99,7 @@ public class EmbedServer {
                     }
                 } finally {
                     // stop
+                    // 释放资源
                     try {
                         workerGroup.shutdownGracefully();
                         bossGroup.shutdownGracefully();

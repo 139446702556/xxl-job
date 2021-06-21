@@ -65,16 +65,20 @@ public class XxlJobExecutor  {
     public void start() throws Exception {
 
         // init logpath
+        // 初始化xxljob运行日志路径和glue脚本保存路径信息（如果路径存在不存在文件，则创建）
         XxlJobFileAppender.initLogPath(logPath);
 
         // init invoker, admin-client
+        // 初始化任务调用器（admin client）
         initAdminBizList(adminAddresses, accessToken);
 
 
         // init JobLogFileCleanThread
+        // 启动job log清除线程
         JobLogFileCleanThread.getInstance().start(logRetentionDays);
 
         // init TriggerCallbackThread
+        // 初始化callback事件监听器和处理调用失败的callback事件监听器
         TriggerCallbackThread.getInstance().start();
 
         // init executor-server
@@ -113,6 +117,7 @@ public class XxlJobExecutor  {
 
     // ---------------------- admin-client (rpc invoker) ----------------------
     private static List<AdminBiz> adminBizList;
+    // 初始化admin client，将其保存到adminBizList容器中
     private void initAdminBizList(String adminAddresses, String accessToken) throws Exception {
         if (adminAddresses!=null && adminAddresses.trim().length()>0) {
             for (String address: adminAddresses.trim().split(",")) {
@@ -138,10 +143,13 @@ public class XxlJobExecutor  {
     private void initEmbedServer(String address, String ip, int port, String appname, String accessToken) throws Exception {
 
         // fill ip port
+        // 默认使用9999端口
         port = port>0?port: NetUtil.findAvailablePort(9999);
+        // 默认使用本地ip地址
         ip = (ip!=null&&ip.trim().length()>0)?ip: IpUtil.getIp();
 
         // generate address
+        // 如果为设置address（注册到xxljob服务端的地址信息），则根据ip和port来对其进行生成
         if (address==null || address.trim().length()==0) {
             String ip_port_address = IpUtil.getIpPort(ip, port);   // registry-address：default use address to registry , otherwise use ip:port if address is null
             address = "http://{ip_port}/".replace("{ip_port}", ip_port_address);
@@ -153,6 +161,7 @@ public class XxlJobExecutor  {
         }
 
         // start
+        // 启动内嵌服务，用于注册到server中，监听server对其的调用
         embedServer = new EmbedServer();
         embedServer.start(address, port, appname, accessToken);
     }
@@ -170,6 +179,7 @@ public class XxlJobExecutor  {
 
 
     // ---------------------- job handler repository ----------------------
+    // job handler注册器（容器） 用于存储注册的处理器和其名称的对应关系
     private static ConcurrentMap<String, IJobHandler> jobHandlerRepository = new ConcurrentHashMap<String, IJobHandler>();
     public static IJobHandler loadJobHandler(String name){
         return jobHandlerRepository.get(name);

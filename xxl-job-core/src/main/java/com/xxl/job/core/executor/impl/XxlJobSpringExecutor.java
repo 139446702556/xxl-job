@@ -20,7 +20,7 @@ import java.util.Map;
 
 /**
  * xxl-job executor (for spring)
- *
+ * xxl job 执行器 用于服务提供方来接受指令执行相应任务（执行任务的服务）
  * @author xuxueli 2018-11-01 09:24:52
  */
 public class XxlJobSpringExecutor extends XxlJobExecutor implements ApplicationContextAware, SmartInitializingSingleton, DisposableBean {
@@ -28,6 +28,7 @@ public class XxlJobSpringExecutor extends XxlJobExecutor implements ApplicationC
 
 
     // start
+    // 启动入口
     @Override
     public void afterSingletonsInstantiated() {
 
@@ -35,9 +36,11 @@ public class XxlJobSpringExecutor extends XxlJobExecutor implements ApplicationC
         /*initJobHandlerRepository(applicationContext);*/
 
         // init JobHandler Repository (for method)
+        // 初始化job handler相关信息，并将其注册都容器中
         initJobHandlerMethodRepository(applicationContext);
 
         // refresh GlueFactory
+        // 初始化glueFactory
         GlueFactory.refreshInstance(1);
 
         // super start
@@ -82,12 +85,15 @@ public class XxlJobSpringExecutor extends XxlJobExecutor implements ApplicationC
             return;
         }
         // init job handler from method
+        // 从当前容器中获取全部单例模式的bean名称
         String[] beanDefinitionNames = applicationContext.getBeanNamesForType(Object.class, false, true);
+        //遍历全部bean name
         for (String beanDefinitionName : beanDefinitionNames) {
             Object bean = applicationContext.getBean(beanDefinitionName);
 
             Map<Method, XxlJob> annotatedMethods = null;   // referred to ：org.springframework.context.event.EventListenerMethodProcessor.processBean
             try {
+                //查找当前bean对象类型中的标注了@xxljob注解的方法与其对应注解的配置信息
                 annotatedMethods = MethodIntrospector.selectMethods(bean.getClass(),
                         new MethodIntrospector.MetadataLookup<XxlJob>() {
                             @Override
@@ -113,6 +119,7 @@ public class XxlJobSpringExecutor extends XxlJobExecutor implements ApplicationC
                 if (name.trim().length() == 0) {
                     throw new RuntimeException("xxl-job method-jobhandler name invalid, for[" + bean.getClass() + "#" + executeMethod.getName() + "] .");
                 }
+                // 处理器名称不允许出现重复
                 if (loadJobHandler(name) != null) {
                     throw new RuntimeException("xxl-job jobhandler[" + name + "] naming conflicts.");
                 }
@@ -126,6 +133,8 @@ public class XxlJobSpringExecutor extends XxlJobExecutor implements ApplicationC
                     throw new RuntimeException("xxl-job method-jobhandler return-classtype invalid, for[" + bean.getClass() + "#" + method.getName() + "] , " +
                             "The correct method format like \" public ReturnT<String> execute(String param) \" .");
                 }*/
+
+                //设置方法访问权限，从当前bean对象中获取注解中设置的init方法和destory方法（如果存在）
 
                 executeMethod.setAccessible(true);
 
@@ -151,6 +160,7 @@ public class XxlJobSpringExecutor extends XxlJobExecutor implements ApplicationC
                 }
 
                 // registry jobhandler
+                // 注册job handler
                 registJobHandler(name, new MethodJobHandler(bean, executeMethod, initMethod, destroyMethod));
             }
         }
