@@ -72,7 +72,7 @@ public class EmbedServer {
                                 @Override
                                 public void initChannel(SocketChannel channel) throws Exception {
                                     channel.pipeline()
-                                            .addLast(new IdleStateHandler(0, 0, 30 * 3, TimeUnit.SECONDS))  // beat 3N, close if idle
+                                            .addLast(new IdleStateHandler(0, 0, 30 * 3, TimeUnit.SECONDS))  // beat 3N, close if idle 用于心跳检测，超过指定空闲时间则进行心跳检测，若无应答则关闭远程连接
                                             .addLast(new HttpServerCodec())
                                             .addLast(new HttpObjectAggregator(5 * 1024 * 1024))  // merge request & reponse to FULL
                                             .addLast(new EmbedHttpServerHandler(executorBiz, accessToken, bizThreadPool));
@@ -153,6 +153,7 @@ public class EmbedServer {
 
             // request parse
             //final byte[] requestBytes = ByteBufUtil.getBytes(msg.content());    // byteBuf.toString(io.netty.util.CharsetUtil.UTF_8);
+            // 解析请求相关信息
             String requestData = msg.content().toString(CharsetUtil.UTF_8);
             String uri = msg.uri();
             HttpMethod httpMethod = msg.method();
@@ -164,12 +165,14 @@ public class EmbedServer {
                 @Override
                 public void run() {
                     // do invoke
+                    // 调用请求对应的本地方法
                     Object responseObj = process(httpMethod, uri, requestData, accessTokenReq);
 
                     // to json
                     String responseJson = GsonTool.toJson(responseObj);
 
                     // write response
+                    // 将请求执行结果响应给调用方
                     writeResponse(ctx, keepAlive, responseJson);
                 }
             });
@@ -178,12 +181,14 @@ public class EmbedServer {
         private Object process(HttpMethod httpMethod, String uri, String requestData, String accessTokenReq) {
 
             // valid
+            // 只支持post请求
             if (HttpMethod.POST != httpMethod) {
                 return new ReturnT<String>(ReturnT.FAIL_CODE, "invalid request, HttpMethod not support.");
             }
             if (uri==null || uri.trim().length()==0) {
                 return new ReturnT<String>(ReturnT.FAIL_CODE, "invalid request, uri-mapping empty.");
             }
+            // 验证token是否匹配
             if (accessToken!=null
                     && accessToken.trim().length()>0
                     && !accessToken.equals(accessTokenReq)) {
@@ -191,6 +196,7 @@ public class EmbedServer {
             }
 
             // services mapping
+            // 根据请求url来执行对应操作
             try {
                 if ("/beat".equals(uri)) {
                     return executorBiz.beat();
@@ -217,6 +223,7 @@ public class EmbedServer {
 
         /**
          * write response
+         * 发送指定http请求的响应给调用方
          */
         private void writeResponse(ChannelHandlerContext ctx, boolean keepAlive, String responseJson) {
             // write response

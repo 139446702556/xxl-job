@@ -82,6 +82,7 @@ public class XxlJobExecutor  {
         TriggerCallbackThread.getInstance().start();
 
         // init executor-server
+        // 启动内嵌服务，用于连接admin，并为其提供指定任务的调度
         initEmbedServer(address, ip, port, appname, accessToken);
     }
     public void destroy(){
@@ -193,13 +194,17 @@ public class XxlJobExecutor  {
     // ---------------------- job thread repository ----------------------
     private static ConcurrentMap<Integer, JobThread> jobThreadRepository = new ConcurrentHashMap<Integer, JobThread>();
     public static JobThread registJobThread(int jobId, IJobHandler handler, String removeOldReason){
+        //创建处理给定job任务的thread，并启动
         JobThread newJobThread = new JobThread(jobId, handler);
         newJobThread.start();
         logger.info(">>>>>>>>>>> xxl-job regist JobThread success, jobId:{}, handler:{}", new Object[]{jobId, handler});
-
+        //将job id和job thread注册到容器中
         JobThread oldJobThread = jobThreadRepository.put(jobId, newJobThread);	// putIfAbsent | oh my god, map's put method return the old value!!!
+        // 如果当前job id已存在对应执行线程，则对其进行停止释放
         if (oldJobThread != null) {
+            //用于终止运行中的线程
             oldJobThread.toStop(removeOldReason);
+            //用于终止阻塞中的线程
             oldJobThread.interrupt();
         }
 

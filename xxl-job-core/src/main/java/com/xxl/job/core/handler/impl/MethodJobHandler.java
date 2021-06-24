@@ -34,6 +34,7 @@ public class MethodJobHandler extends IJobHandler {
 
     @Override
     public void init() throws Exception {
+        // 如果当前handler存在初始化方法，则调用
         if(initMethod != null) {
             initMethod.invoke(target);
         }

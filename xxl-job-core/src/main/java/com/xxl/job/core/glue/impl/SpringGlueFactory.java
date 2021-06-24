@@ -21,6 +21,7 @@ public class SpringGlueFactory extends GlueFactory {
 
     /**
      * inject action of spring
+     * 向指定类对象中注入对应的bean
      * @param instance
      */
     @Override

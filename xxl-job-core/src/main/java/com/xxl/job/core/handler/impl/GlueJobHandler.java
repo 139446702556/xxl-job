@@ -5,7 +5,7 @@ import com.xxl.job.core.handler.IJobHandler;
 
 /**
  * glue job handler
- *
+ * 用于执行嵌入式代码的handler
  * @author xuxueli 2016-5-19 21:05:45
  */
 public class GlueJobHandler extends IJobHandler {

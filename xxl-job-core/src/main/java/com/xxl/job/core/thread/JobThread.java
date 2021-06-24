@@ -51,17 +51,18 @@ public class JobThread extends Thread{
 
     /**
      * new trigger to queue
-     *
+     * 添加新任务到当前thread的执行队列中
      * @param triggerParam
      * @return
      */
 	public ReturnT<String> pushTriggerQueue(TriggerParam triggerParam) {
 		// avoid repeat
+		// 通过判断job log id 来确定一次任务执行的唯一性（triggerLogIdSet保存队列中为执行任务的log id）
 		if (triggerLogIdSet.contains(triggerParam.getLogId())) {
 			logger.info(">>>>>>>>>>> repeate trigger job, logId:{}", triggerParam.getLogId());
 			return new ReturnT<String>(ReturnT.FAIL_CODE, "repeate trigger job, logId:" + triggerParam.getLogId());
 		}
-
+		//添加给定任务信息到当前线程的执行队列中
 		triggerLogIdSet.add(triggerParam.getLogId());
 		triggerQueue.add(triggerParam);
         return ReturnT.SUCCESS;
@@ -69,7 +70,7 @@ public class JobThread extends Thread{
 
     /**
      * kill job thread
-     *
+     * 停止当前thread运行
      * @param stopReason
      */
 	public void toStop(String stopReason) {
@@ -84,6 +85,7 @@ public class JobThread extends Thread{
 
     /**
      * is running job
+	 * 判断当前线程是否在工作
      * @return
      */
     public boolean isRunningOrHasQueue() {
@@ -94,6 +96,7 @@ public class JobThread extends Thread{
 	public void run() {
 
     	// init
+		// handler初始化
     	try {
 			handler.init();
 		} catch (Throwable e) {
@@ -101,6 +104,7 @@ public class JobThread extends Thread{
 		}
 
 		// execute
+		// 开始执行任务
 		while(!toStop){
 			running = false;
 			idleTimes++;
@@ -108,14 +112,19 @@ public class JobThread extends Thread{
             TriggerParam triggerParam = null;
             try {
 				// to check toStop signal, we need cycle, so wo cannot use queue.take(), instand of poll(timeout)
+				// 获取执行任务（如果队列无任务，则阻塞三秒后返回null）
 				triggerParam = triggerQueue.poll(3L, TimeUnit.SECONDS);
+				// 有任务执行
 				if (triggerParam!=null) {
+					//设置状态
 					running = true;
 					idleTimes = 0;
 					triggerLogIdSet.remove(triggerParam.getLogId());
 
 					// log filename, like "logPath/yyyy-MM-dd/9999.log"
+					// 获取job执行日志保存路径
 					String logFileName = XxlJobFileAppender.makeLogFileName(new Date(triggerParam.getLogDateTime()), triggerParam.getLogId());
+					// 初始化job context
 					XxlJobContext xxlJobContext = new XxlJobContext(
 							triggerParam.getJobId(),
 							triggerParam.getExecutorParams(),
