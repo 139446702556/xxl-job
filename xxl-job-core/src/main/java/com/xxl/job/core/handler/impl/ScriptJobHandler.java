@@ -47,7 +47,7 @@ public class ScriptJobHandler extends IJobHandler {
 
     @Override
     public void execute() throws Exception {
-
+        // 检测执行类型
         if (!glueType.isScript()) {
             XxlJobHelper.handleFail("glueType["+ glueType +"] invalid.");
             return;
@@ -57,6 +57,7 @@ public class ScriptJobHandler extends IJobHandler {
         String cmd = glueType.getCmd();
 
         // make script file
+        //检测脚本文件是否存在，不存在则创建
         String scriptFileName = XxlJobFileAppender.getGlueSrcPath()
                 .concat(File.separator)
                 .concat(String.valueOf(jobId))
@@ -78,6 +79,7 @@ public class ScriptJobHandler extends IJobHandler {
         scriptParams[2] = String.valueOf(XxlJobContext.getXxlJobContext().getShardTotal());
 
         // invoke
+        // 执行脚本，返回执行状态
         XxlJobHelper.log("----------- script file:"+ scriptFileName +" -----------");
         int exitValue = ScriptUtil.execToFile(cmd, scriptFileName, logFileName, scriptParams);
 

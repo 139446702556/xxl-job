@@ -59,9 +59,11 @@ public class ScriptUtil {
         Thread errThread = null;
         try {
             // file
+            // log文件输出流
             fileOutputStream = new FileOutputStream(logFile, true);
 
             // command
+            // 拼接执行命令
             List<String> cmdarray = new ArrayList<>();
             cmdarray.add(command);
             cmdarray.add(scriptFile);
@@ -73,9 +75,11 @@ public class ScriptUtil {
             String[] cmdarrayFinal = cmdarray.toArray(new String[cmdarray.size()]);
 
             // process-exec
+            // 执行命令
             final Process process = Runtime.getRuntime().exec(cmdarrayFinal);
 
             // log-thread
+            // 将执行信息（info和err）输出到log中
             final FileOutputStream finalFileOutputStream = fileOutputStream;
             inputThread = new Thread(new Runnable() {
                 @Override
@@ -101,6 +105,7 @@ public class ScriptUtil {
             errThread.start();
 
             // process-wait
+            // 获取执行结果，并等待输出保存完成，返回执行状态
             int exitValue = process.waitFor();      // exit code: 0=success, 1=error
 
             // log-thread join
@@ -111,7 +116,7 @@ public class ScriptUtil {
         } catch (Exception e) {
             XxlJobHelper.log(e);
             return -1;
-        } finally {
+        } finally { //释放资源
             if (fileOutputStream != null) {
                 try {
                     fileOutputStream.close();
