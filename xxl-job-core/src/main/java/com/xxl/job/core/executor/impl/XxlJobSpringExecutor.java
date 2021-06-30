@@ -52,6 +52,7 @@ public class XxlJobSpringExecutor extends XxlJobExecutor implements ApplicationC
     }
 
     // destroy
+    // 服务终止前执行
     @Override
     public void destroy() {
         super.destroy();

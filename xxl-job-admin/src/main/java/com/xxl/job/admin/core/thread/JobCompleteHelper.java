@@ -153,15 +153,19 @@ public class JobCompleteHelper {
 
 	private ReturnT<String> callback(HandleCallbackParam handleCallbackParam) {
 		// valid log item
+		// 获取本次执行的相关信息（xxl_job_log表）
 		XxlJobLog log = XxlJobAdminConfig.getAdminConfig().getXxlJobLogDao().load(handleCallbackParam.getLogId());
+		// 不存在
 		if (log == null) {
 			return new ReturnT<String>(ReturnT.FAIL_CODE, "log item not found.");
 		}
+		// 本次执行回调信息处理发生重复（已有处理结果）
 		if (log.getHandleCode() > 0) {
 			return new ReturnT<String>(ReturnT.FAIL_CODE, "log repeate callback.");     // avoid repeat callback, trigger child job etc
 		}
 
 		// handle msg
+
 		StringBuffer handleMsg = new StringBuffer();
 		if (log.getHandleMsg()!=null) {
 			handleMsg.append(log.getHandleMsg()).append("<br>");

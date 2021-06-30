@@ -25,12 +25,13 @@ public class LoginService {
     @Resource
     private XxlJobUserDao xxlJobUserDao;
 
-
+    // 序列化（通过BigInteger将json转化为十六进制字符串）
     private String makeToken(XxlJobUser xxlJobUser){
         String tokenJson = JacksonUtil.writeValueAsString(xxlJobUser);
         String tokenHex = new BigInteger(tokenJson.getBytes()).toString(16);
         return tokenHex;
     }
+    //反序列化
     private XxlJobUser parseToken(String tokenHex){
         XxlJobUser xxlJobUser = null;
         if (tokenHex != null) {
@@ -67,7 +68,7 @@ public class LoginService {
 
     /**
      * logout
-     *
+     *  注销 （通过将response中的token cookies清空，并且将作用域设置为根路径）
      * @param request
      * @param response
      */
@@ -83,15 +84,19 @@ public class LoginService {
      * @return
      */
     public XxlJobUser ifLogin(HttpServletRequest request, HttpServletResponse response){
+        // 获取user token
         String cookieToken = CookieUtil.getValue(request, LOGIN_IDENTITY_KEY);
         if (cookieToken != null) {
             XxlJobUser cookieUser = null;
             try {
+                // 解析token（只包含登陆信息）获取对象
                 cookieUser = parseToken(cookieToken);
             } catch (Exception e) {
+                //解析失败则注销
                 logout(request, response);
             }
             if (cookieUser != null) {
+                // 获取用户信息，判断登陆信息是否正确
                 XxlJobUser dbUser = xxlJobUserDao.loadByUserName(cookieUser.getUsername());
                 if (dbUser != null) {
                     if (cookieUser.getPassword().equals(dbUser.getPassword())) {

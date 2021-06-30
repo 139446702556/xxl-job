@@ -13,7 +13,7 @@ import java.util.HashMap;
 
 /**
  * push cookies to model as cookieMap
- *
+ * request后置拦截器（将request中的cookies信息添加到返回的model中，作为cookieMap属性）
  * @author xuxueli 2015-12-12 18:09:04
  */
 @Component

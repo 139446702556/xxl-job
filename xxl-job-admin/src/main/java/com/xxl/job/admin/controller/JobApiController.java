@@ -30,7 +30,7 @@ public class JobApiController {
 
     /**
      * api
-     *
+     * admin服务与executor服务交互接口，无需验证
      * @param uri
      * @param data
      * @return
@@ -47,6 +47,7 @@ public class JobApiController {
         if (uri==null || uri.trim().length()==0) {
             return new ReturnT<String>(ReturnT.FAIL_CODE, "invalid request, uri-mapping empty.");
         }
+        // 校验内部交互token合法性
         if (XxlJobAdminConfig.getAdminConfig().getAccessToken()!=null
                 && XxlJobAdminConfig.getAdminConfig().getAccessToken().trim().length()>0
                 && !XxlJobAdminConfig.getAdminConfig().getAccessToken().equals(request.getHeader(XxlJobRemotingUtil.XXL_JOB_ACCESS_TOKEN))) {
@@ -54,6 +55,7 @@ public class JobApiController {
         }
 
         // services mapping
+        // 内部服务处理动作映射
         // callback动作用于处理任务执行结果信息，并将其修改保存到db中
         if ("callback".equals(uri)) {
             List<HandleCallbackParam> callbackParamList = GsonTool.fromJson(data, List.class, HandleCallbackParam.class);

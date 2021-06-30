@@ -26,10 +26,12 @@ public class ExecutorRegistryThread {
     public void start(final String appname, final String address){
 
         // valid
+        // appname必须设置
         if (appname==null || appname.trim().length()==0) {
             logger.warn(">>>>>>>>>>> xxl-job, executor registry config fail, appname is null.");
             return;
         }
+        // admin服务必须存在（任务调度的服务端）
         if (XxlJobExecutor.getAdminBizList() == null) {
             logger.warn(">>>>>>>>>>> xxl-job, executor registry config fail, adminAddresses is null.");
             return;
@@ -40,8 +42,10 @@ public class ExecutorRegistryThread {
             public void run() {
 
                 // registry
+                // 服务注册，每三十秒检查一下活跃状态
                 while (!toStop) {
                     try {
+                        // 向admin服务中注册当前服务（调用其registry接口），有一次成功，则终止注册操作
                         RegistryParam registryParam = new RegistryParam(RegistryConfig.RegistType.EXECUTOR.name(), appname, address);
                         for (AdminBiz adminBiz: XxlJobExecutor.getAdminBizList()) {
                             try {
@@ -77,6 +81,7 @@ public class ExecutorRegistryThread {
                 }
 
                 // registry remove
+                // 服务终止时，删除admin中的对应服务注册信息（registryRemove接口）
                 try {
                     RegistryParam registryParam = new RegistryParam(RegistryConfig.RegistType.EXECUTOR.name(), appname, address);
                     for (AdminBiz adminBiz: XxlJobExecutor.getAdminBizList()) {

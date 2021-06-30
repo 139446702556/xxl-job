@@ -8,7 +8,7 @@ import javax.annotation.Resource;
 
 /**
  * web mvc config
- *
+ * 配置类  注册拦截器
  * @author xuxueli 2018-04-02 20:48:20
  */
 @Configuration

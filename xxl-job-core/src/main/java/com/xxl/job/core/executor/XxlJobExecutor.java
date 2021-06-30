@@ -156,7 +156,7 @@ public class XxlJobExecutor  {
             address = "http://{ip_port}/".replace("{ip_port}", ip_port_address);
         }
 
-        // accessToken
+        // accessToken(警告)
         if (accessToken==null || accessToken.trim().length()==0) {
             logger.warn(">>>>>>>>>>> xxl-job accessToken is empty. To ensure system security, please set the accessToken.");
         }

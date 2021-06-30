@@ -35,11 +35,12 @@ public class EmbedServer {
 
     public void start(final String address, final int port, final String appname, final String accessToken) {
         executorBiz = new ExecutorBizImpl();
+
         thread = new Thread(new Runnable() {
 
             @Override
             public void run() {
-
+                //使用netty启动boss和work线程池来进行端口请求监听和处理（处理时使用的是bizThreadPool线程池对其进行的操作）
                 // param
                 EventLoopGroup bossGroup = new NioEventLoopGroup();
                 EventLoopGroup workerGroup = new NioEventLoopGroup();
@@ -81,14 +82,17 @@ public class EmbedServer {
                             .childOption(ChannelOption.SO_KEEPALIVE, true);
 
                     // bind
+                    // 绑定端口，并启动前台线程对其事件监听
                     ChannelFuture future = bootstrap.bind(port).sync();
 
                     logger.info(">>>>>>>>>>> xxl-job remoting server start success, nettype = {}, port = {}", EmbedServer.class, port);
 
                     // start registry
+                    // 注册当前执行器到admin服务（调度服务）中
                     startRegistry(appname, address);
 
                     // wait util stop
+                    // 等待stop事件到来（用于阻塞当前启动线程，防止执行finally释放资源）
                     future.channel().closeFuture().sync();
 
                 } catch (InterruptedException e) {
@@ -199,18 +203,23 @@ public class EmbedServer {
             // 根据请求url来执行对应操作
             try {
                 if ("/beat".equals(uri)) {
+                    // 心跳
                     return executorBiz.beat();
                 } else if ("/idleBeat".equals(uri)) {
                     IdleBeatParam idleBeatParam = GsonTool.fromJson(requestData, IdleBeatParam.class);
+                    // 判断当前jobid对应的线程是否空闲
                     return executorBiz.idleBeat(idleBeatParam);
                 } else if ("/run".equals(uri)) {
                     TriggerParam triggerParam = GsonTool.fromJson(requestData, TriggerParam.class);
+                    // 执行指定job任务一次
                     return executorBiz.run(triggerParam);
                 } else if ("/kill".equals(uri)) {
                     KillParam killParam = GsonTool.fromJson(requestData, KillParam.class);
+                    // 移除jobid和thread的注册关系，并停止执行线程（标记、需要执行到检查部位才能终止）
                     return executorBiz.kill(killParam);
                 } else if ("/log".equals(uri)) {
                     LogParam logParam = GsonTool.fromJson(requestData, LogParam.class);
+                    // 获取指定job指定执行需要对应的日志信息
                     return executorBiz.log(logParam);
                 } else {
                     return new ReturnT<String>(ReturnT.FAIL_CODE, "invalid request, uri-mapping("+ uri +") not found.");
