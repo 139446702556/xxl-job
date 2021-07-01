@@ -29,6 +29,7 @@ public class I18nUtil {
         }
         try {
             // build i18n prop
+            // 加载配置对应的属性文件（通过i18n实现国际化多语言）
             String i18n = XxlJobAdminConfig.getAdminConfig().getI18n();
             String i18nFile = MessageFormat.format("i18n/message_{0}.properties", i18n);
 

@@ -77,6 +77,7 @@ public class JobTriggerPoolHelper {
                            final String addressList) {
 
         // choose thread pool
+        // 默认使用fast线程池，如果一分钟内同一个job连续超时（大于500ms）十次以上，则切换使用slow线程池来执行其任务
         ThreadPoolExecutor triggerPool_ = fastTriggerPool;
         AtomicInteger jobTimeoutCount = jobTimeoutCountMap.get(jobId);
         if (jobTimeoutCount!=null && jobTimeoutCount.get() > 10) {      // job-timeout 10 times in 1 min
@@ -92,12 +93,14 @@ public class JobTriggerPoolHelper {
 
                 try {
                     // do trigger
+                    // 触发触发器，执行对应job
                     XxlJobTrigger.trigger(jobId, triggerType, failRetryCount, executorShardingParam, executorParam, addressList);
                 } catch (Exception e) {
                     logger.error(e.getMessage(), e);
                 } finally {
 
                     // check timeout-count-map
+                    // 超时次数一分钟清除一次
                     long minTim_now = System.currentTimeMillis()/60000;
                     if (minTim != minTim_now) {
                         minTim = minTim_now;
@@ -105,6 +108,7 @@ public class JobTriggerPoolHelper {
                     }
 
                     // incr timeout-count-map
+                    // job超时次数累加
                     long cost = System.currentTimeMillis()-start;
                     if (cost > 500) {       // ob-timeout threshold 500ms
                         AtomicInteger timeoutCount = jobTimeoutCountMap.putIfAbsent(jobId, new AtomicInteger(1));

@@ -156,6 +156,7 @@ public class JobRegistryHelper {
 		}
 
 		// async execute
+		// 未注册，则将此服务信息注册到xxl_job_registry表中；已注册，则更新对应update time
 		registryOrRemoveThreadPool.execute(new Runnable() {
 			@Override
 			public void run() {
@@ -182,6 +183,7 @@ public class JobRegistryHelper {
 		}
 
 		// async execute
+		// 移除xxl_job_registry表中的注册数据
 		registryOrRemoveThreadPool.execute(new Runnable() {
 			@Override
 			public void run() {

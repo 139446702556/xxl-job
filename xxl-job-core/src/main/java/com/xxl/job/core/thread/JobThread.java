@@ -193,7 +193,7 @@ public class JobThread extends Thread{
 					);
 
 				} else {
-					// 如果空闲时间大于30秒，并且当前jobid对应的线程无执行任务，则进行thread释放
+					// 如果空闲时间大于约90秒（执行超过三十次没有任务），并且当前jobid对应的线程无执行任务，则进行thread释放
 					if (idleTimes > 30) {
 						if(triggerQueue.size() == 0) {	// avoid concurrent trigger causes jobId-lost
 							XxlJobExecutor.removeJobThread(jobId, "excutor idel times over limit.");

@@ -165,7 +165,7 @@ public class JobCompleteHelper {
 		}
 
 		// handle msg
-
+		// 根据回调信息更新log表中的对应处理结果信息
 		StringBuffer handleMsg = new StringBuffer();
 		if (log.getHandleMsg()!=null) {
 			handleMsg.append(log.getHandleMsg()).append("<br>");
@@ -175,6 +175,7 @@ public class JobCompleteHelper {
 		}
 
 		// success, save log
+		// 执行子任务，并保存相应结果log
 		log.setHandleTime(new Date());
 		log.setHandleCode(handleCallbackParam.getHandleCode());
 		log.setHandleMsg(handleMsg.toString());

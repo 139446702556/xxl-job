@@ -28,6 +28,7 @@ public class XxlJobCompleter {
     public static int updateHandleInfoAndFinish(XxlJobLog xxlJobLog) {
 
         // finish
+        // 如果当前job存在子job，则对其进行执行
         finishJob(xxlJobLog);
 
         // text最大64kb 避免长度过长
@@ -36,6 +37,7 @@ public class XxlJobCompleter {
         }
 
         // fresh handle
+        // 修改job处理结果信息
         return XxlJobAdminConfig.getAdminConfig().getXxlJobLogDao().updateHandleInfo(xxlJobLog);
     }
 
@@ -47,16 +49,19 @@ public class XxlJobCompleter {
 
         // 1、handle success, to trigger child job
         String triggerChildMsg = null;
+        // 执行成功
         if (XxlJobContext.HANDLE_COCE_SUCCESS == xxlJobLog.getHandleCode()) {
+            // 获取job的配置信息
             XxlJobInfo xxlJobInfo = XxlJobAdminConfig.getAdminConfig().getXxlJobInfoDao().loadById(xxlJobLog.getJobId());
             if (xxlJobInfo!=null && xxlJobInfo.getChildJobId()!=null && xxlJobInfo.getChildJobId().trim().length()>0) {
                 triggerChildMsg = "<br><br><span style=\"color:#00c0ef;\" > >>>>>>>>>>>"+ I18nUtil.getString("jobconf_trigger_child_run") +"<<<<<<<<<<< </span><br>";
 
                 String[] childJobIds = xxlJobInfo.getChildJobId().split(",");
+                // 执行有效的子任务
                 for (int i = 0; i < childJobIds.length; i++) {
                     int childJobId = (childJobIds[i]!=null && childJobIds[i].trim().length()>0 && isNumeric(childJobIds[i]))?Integer.valueOf(childJobIds[i]):-1;
                     if (childJobId > 0) {
-
+                        // 触发
                         JobTriggerPoolHelper.trigger(childJobId, TriggerTypeEnum.PARENT, -1, null, null, null);
                         ReturnT<String> triggerChildResult = ReturnT.SUCCESS;
 
@@ -77,7 +82,7 @@ public class XxlJobCompleter {
 
             }
         }
-
+        //结合父子job的执行信息，来设置父job本次执行的job信息
         if (triggerChildMsg != null) {
             xxlJobLog.setHandleMsg( xxlJobLog.getHandleMsg() + triggerChildMsg );
         }
