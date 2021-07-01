@@ -22,12 +22,15 @@ public class XxlJobScheduler  {
 
     public void init() throws Exception {
         // init i18n
+        // 初始化国际化内容，例如阻塞执行策略
         initI18n();
 
         // admin trigger pool start
+        // 创建fast和slow两个线程池，用于执行不同响应速度的job任务（admin任务触发器）
         JobTriggerPoolHelper.toStart();
 
         // admin registry monitor run
+        // 初始化服务注册与取消注册的threadpool，以及创建服务管理线程
         JobRegistryHelper.getInstance().start();
 
         // admin fail-monitor run
@@ -71,6 +74,7 @@ public class XxlJobScheduler  {
     // ---------------------- I18n ----------------------
 
     private void initI18n(){
+        // 转换阻塞执行策略说为执行语言类型文字
         for (ExecutorBlockStrategyEnum item:ExecutorBlockStrategyEnum.values()) {
             item.setTitle(I18nUtil.getString("jobconf_block_".concat(item.name())));
         }

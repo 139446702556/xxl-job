@@ -15,7 +15,7 @@ import java.util.Arrays;
 
 /**
  * xxl-job config
- *
+ * xxl job admin service config
  * @author xuxueli 2017-04-28
  */
 
@@ -40,7 +40,7 @@ public class XxlJobAdminConfig implements InitializingBean, DisposableBean {
         xxlJobScheduler = new XxlJobScheduler();
         xxlJobScheduler.init();
     }
-
+    // 内部服务终止
     @Override
     public void destroy() throws Exception {
         xxlJobScheduler.destroy();

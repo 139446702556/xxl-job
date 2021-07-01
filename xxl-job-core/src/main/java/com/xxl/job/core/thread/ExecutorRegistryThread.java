@@ -42,7 +42,7 @@ public class ExecutorRegistryThread {
             public void run() {
 
                 // registry
-                // 服务注册，每三十秒检查一下活跃状态
+                // 服务注册，每三十秒注册一次（心跳）
                 while (!toStop) {
                     try {
                         // 向admin服务中注册当前服务（调用其registry接口），有一次成功，则终止注册操作
