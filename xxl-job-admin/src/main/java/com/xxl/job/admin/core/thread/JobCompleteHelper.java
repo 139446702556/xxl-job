@@ -35,6 +35,7 @@ public class JobCompleteHelper {
 	public void start(){
 
 		// for callback
+		// 初始化用于执行callback任务的thread pool（任务数量达到上限，则会使用调用线程直接运行）
 		callbackThreadPool = new ThreadPoolExecutor(
 				2,
 				20,
@@ -57,12 +58,14 @@ public class JobCompleteHelper {
 
 
 		// for monitor
+		// 每一分钟执行一次，清理丢失任务结果的死尸任务记录
 		monitorThread = new Thread(new Runnable() {
 
 			@Override
 			public void run() {
 
 				// wait for JobTriggerPoolHelper-init
+				// 等待JobTriggerPoolHelper的thread pool init完成，此线程执行job任务需要用到其的两个线程池
 				try {
 					TimeUnit.MILLISECONDS.sleep(50);
 				} catch (InterruptedException e) {
@@ -76,8 +79,9 @@ public class JobCompleteHelper {
 					try {
 						// 任务结果丢失处理：调度记录停留在 "运行中" 状态超过10min，且对应执行器心跳注册失败不在线，则将本地调度主动标记失败；
 						Date losedTime = DateUtil.addMinutes(new Date(), -10);
+						// 获取正在运行中，且触发时间距离当前超过十分钟，并且对应执行服务地址已在注册表中被移除（已下线）的任务id（丢失任务结果）
 						List<Long> losedJobIds  = XxlJobAdminConfig.getAdminConfig().getXxlJobLogDao().findLostJobIds(losedTime);
-
+						// 修改这些任务的状态为执行失败
 						if (losedJobIds!=null && losedJobIds.size()>0) {
 							for (Long logId: losedJobIds) {
 

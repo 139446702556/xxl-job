@@ -36,10 +36,11 @@ public class JobLogReportHelper {
                 // last clean log time
                 long lastCleanLogTime = 0;
 
-
+                // 一分钟扫描一次
                 while (!toStop) {
 
                     // 1、log-report refresh: refresh log report in 3 days
+                    // 刷新最近三天每天的任务执行情况报告信息
                     try {
 
                         for (int i = 0; i < 3; i++) {
@@ -67,7 +68,7 @@ public class JobLogReportHelper {
                             xxlJobLogReport.setRunningCount(0);
                             xxlJobLogReport.setSucCount(0);
                             xxlJobLogReport.setFailCount(0);
-
+                            // 获取指定时间内，总任务执行数、仍正在执行数、执行成功数
                             Map<String, Object> triggerCountMap = XxlJobAdminConfig.getAdminConfig().getXxlJobLogDao().findLogReport(todayFrom, todayTo);
                             if (triggerCountMap!=null && triggerCountMap.size()>0) {
                                 int triggerDayCount = triggerCountMap.containsKey("triggerDayCount")?Integer.valueOf(String.valueOf(triggerCountMap.get("triggerDayCount"))):0;
@@ -81,6 +82,7 @@ public class JobLogReportHelper {
                             }
 
                             // do refresh
+                            // 保存job报告信息
                             int ret = XxlJobAdminConfig.getAdminConfig().getXxlJobLogReportDao().update(xxlJobLogReport);
                             if (ret < 1) {
                                 XxlJobAdminConfig.getAdminConfig().getXxlJobLogReportDao().save(xxlJobLogReport);
@@ -94,6 +96,7 @@ public class JobLogReportHelper {
                     }
 
                     // 2、log-clean: switch open & once each day
+                    // 每天执行清理一次
                     if (XxlJobAdminConfig.getAdminConfig().getLogretentiondays()>0
                             && System.currentTimeMillis() - lastCleanLogTime > 24*60*60*1000) {
 
@@ -107,6 +110,7 @@ public class JobLogReportHelper {
                         Date clearBeforeTime = expiredDay.getTime();
 
                         // clean expired log
+                        // 清除超过指定时间以外的log数据
                         List<Long> logIds = null;
                         do {
                             logIds = XxlJobAdminConfig.getAdminConfig().getXxlJobLogDao().findClearLogIds(0, 0, clearBeforeTime, 0, 1000);

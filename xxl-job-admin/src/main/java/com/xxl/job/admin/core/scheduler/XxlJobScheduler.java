@@ -34,12 +34,15 @@ public class XxlJobScheduler  {
         JobRegistryHelper.getInstance().start();
 
         // admin fail-monitor run
+        // 处理执行失败的任务，发送告警以及重试操作
         JobFailMonitorHelper.getInstance().start();
 
         // admin lose-monitor run ( depend on JobTriggerPoolHelper )
+        // 初始化callback thread pool，启动管理线程（用于处理结果丢失的任务log）
         JobCompleteHelper.getInstance().start();
 
         // admin log report start
+        // 启动线程执行job执行数据统计生成报告信息和清理超过保存日期的job log信息
         JobLogReportHelper.getInstance().start();
 
         // start-schedule  ( depend on JobTriggerPoolHelper )

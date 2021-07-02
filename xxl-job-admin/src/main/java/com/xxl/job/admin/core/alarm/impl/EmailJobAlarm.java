@@ -29,7 +29,7 @@ public class EmailJobAlarm implements JobAlarm {
 
     /**
      * fail alarm
-     *
+     * 发送告警邮件 （spring way email send）
      * @param jobLog
      */
     public boolean doAlarm(XxlJobInfo info, XxlJobLog jobLog){
