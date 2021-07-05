@@ -441,7 +441,7 @@ public final class CronExpression implements Serializable, Cloneable {
         expressionParsed = true;
 
         try {
-
+            // init
             if (seconds == null) {
                 seconds = new TreeSet<Integer>();
             }
@@ -463,16 +463,17 @@ public final class CronExpression implements Serializable, Cloneable {
             if (years == null) {
                 years = new TreeSet<Integer>();
             }
-
+            // 表达式标识位 秒
             int exprOn = SECOND;
 
             StringTokenizer exprsTok = new StringTokenizer(expression, " \t",
                     false);
-
+            // expression各块解析
             while (exprsTok.hasMoreTokens() && exprOn <= YEAR) {
                 String expr = exprsTok.nextToken().trim();
 
                 // throw an exception if L is used with other days of the month
+                // expression格式校验
                 if(exprOn == DAY_OF_MONTH && expr.indexOf('L') != -1 && expr.length() > 1 && expr.contains(",")) {
                     throw new ParseException("Support for specifying 'L' and 'LW' with other days of the month is not implemented", -1);
                 }
@@ -483,7 +484,7 @@ public final class CronExpression implements Serializable, Cloneable {
                 if(exprOn == DAY_OF_WEEK && expr.indexOf('#') != -1 && expr.indexOf('#', expr.indexOf('#') +1) != -1) {
                     throw new ParseException("Support for specifying multiple \"nth\" days is not implemented.", -1);
                 }
-                
+                //当前模块值解析（多个时间点用逗号隔开）
                 StringTokenizer vTok = new StringTokenizer(expr, ",");
                 while (vTok.hasMoreTokens()) {
                     String v = vTok.nextToken();
@@ -527,22 +528,32 @@ public final class CronExpression implements Serializable, Cloneable {
         throws ParseException {
 
         int incr = 0;
+        // 跳过 white space符号
         int i = skipWhiteSpace(pos, s);
+        // 如果游标超出解析内容范围，终止
         if (i >= s.length()) {
             return i;
         }
+        // 获取表达式第一个字符
         char c = s.charAt(i);
+        // 表达式为字母表示方式
         if ((c >= 'A') && (c <= 'Z') && (!s.equals("L")) && (!s.equals("LW")) && (!s.matches("^L-[0-9]*[W]?"))) {
+            // 获取前三个字符（月和周的缩写）
             String sub = s.substring(i, i + 3);
             int sval = -1;
             int eval = -1;
+            // 月
             if (type == MONTH) {
+                // 解析获得当前月份
                 sval = getMonthNumber(sub) + 1;
+                // 解析失败异常
                 if (sval <= 0) {
                     throw new ParseException("Invalid Month value: '" + sub + "'", i);
                 }
+                //未解析完
                 if (s.length() > i + 3) {
                     c = s.charAt(i + 3);
+                    // 区间 解析后置月份
                     if (c == '-') {
                         i += 4;
                         sub = s.substring(i, i + 3);
@@ -552,7 +563,8 @@ public final class CronExpression implements Serializable, Cloneable {
                         }
                     }
                 }
-            } else if (type == DAY_OF_WEEK) {
+            } else if (type == DAY_OF_WEEK) { // 周
+                // 解析星期几
                 sval = getDayOfWeekNumber(sub);
                 if (sval < 0) {
                     throw new ParseException("Invalid Day-of-Week value: '"
@@ -560,6 +572,7 @@ public final class CronExpression implements Serializable, Cloneable {
                 }
                 if (s.length() > i + 3) {
                     c = s.charAt(i + 3);
+                    // 区间解析 后置星期
                     if (c == '-') {
                         i += 4;
                         sub = s.substring(i, i + 3);
@@ -569,7 +582,7 @@ public final class CronExpression implements Serializable, Cloneable {
                                     "Invalid Day-of-Week value: '" + sub
                                         + "'", i);
                         }
-                    } else if (c == '#') {
+                    } else if (c == '#') { //解析这个月的第几周
                         try {
                             i += 4;
                             nthdayOfWeek = Integer.parseInt(s.substring(i));
@@ -581,13 +594,13 @@ public final class CronExpression implements Serializable, Cloneable {
                                     "A numeric value between 1 and 5 must follow the '#' option",
                                     i);
                         }
-                    } else if (c == 'L') {
+                    } else if (c == 'L') { // 本周最后一天（星期六）
                         lastdayOfWeek = true;
                         i++;
                     }
                 }
 
-            } else {
+            } else { //无效表达式
                 throw new ParseException(
                         "Illegal characters for this position: '" + sub + "'",
                         i);
@@ -598,9 +611,10 @@ public final class CronExpression implements Serializable, Cloneable {
             addToSet(sval, eval, incr, type);
             return (i + 3);
         }
-
+        // ？处理
         if (c == '?') {
             i++;
+            // 格式检查
             if ((i + 1) < s.length() 
                     && (s.charAt(i) != ' ' && s.charAt(i + 1) != '\t')) {
                 throw new ParseException("Illegal character after '?': "
@@ -623,16 +637,17 @@ public final class CronExpression implements Serializable, Cloneable {
             addToSet(NO_SPEC_INT, -1, 0, type);
             return i;
         }
-
+        // * 和 / 处理
         if (c == '*' || c == '/') {
+            // 一个*符号处理
             if (c == '*' && (i + 1) >= s.length()) {
                 addToSet(ALL_SPEC_INT, -1, incr, type);
                 return i + 1;
             } else if (c == '/'
                     && ((i + 1) >= s.length() || s.charAt(i + 1) == ' ' || s
-                            .charAt(i + 1) == '\t')) { 
+                            .charAt(i + 1) == '\t')) {  // /符号使用格式校验
                 throw new ParseException("'/' must be followed by an integer.", i);
-            } else if (c == '*') {
+            } else if (c == '*') { // * 和 / 共存
                 i++;
             }
             c = s.charAt(i);
@@ -641,13 +656,14 @@ public final class CronExpression implements Serializable, Cloneable {
                 if (i >= s.length()) {
                     throw new ParseException("Unexpected end of string.", i);
                 }
-
+                //获取/后面的值
                 incr = getNumericValue(s, i);
 
                 i++;
                 if (incr > 10) {
                     i++;
                 }
+                // 检测递增值的有效性
                 checkIncrementRange(incr, type, i);
             } else {
                 incr = 1;
@@ -655,23 +671,28 @@ public final class CronExpression implements Serializable, Cloneable {
 
             addToSet(ALL_SPEC_INT, -1, incr, type);
             return i;
-        } else if (c == 'L') {
+        } else if (c == 'L') { // L符号处理
             i++;
+            // 月
             if (type == DAY_OF_MONTH) {
                 lastdayOfMonth = true;
             }
+            // 周
             if (type == DAY_OF_WEEK) {
                 addToSet(7, 7, 0, type);
             }
+            // 处理具有偏移量的day
             if(type == DAY_OF_MONTH && s.length() > i) {
                 c = s.charAt(i);
                 if(c == '-') {
+                    // 获取距离本月最后一天的偏移量
                     ValueSet vs = getValue(0, s, i+1);
                     lastdayOffset = vs.value;
                     if(lastdayOffset > 30)
                         throw new ParseException("Offset from last day must be <= 30", i+1);
                     i = vs.pos;
-                }                        
+                }
+                // W符号处理 （最近的工作日）
                 if(s.length() > i) {
                     c = s.charAt(i);
                     if(c == 'W') {
@@ -681,14 +702,14 @@ public final class CronExpression implements Serializable, Cloneable {
                 }
             }
             return i;
-        } else if (c >= '0' && c <= '9') {
+        } else if (c >= '0' && c <= '9') { //数字
             int val = Integer.parseInt(String.valueOf(c));
             i++;
-            if (i >= s.length()) {
+            if (i >= s.length()) { //单数字定义
                 addToSet(val, -1, -1, type);
             } else {
                 c = s.charAt(i);
-                if (c >= '0' && c <= '9') {
+                if (c >= '0' && c <= '9') { // 10及以上的数字处理
                     ValueSet vs = getValue(val, s, i);
                     val = vs.value;
                     i = vs.pos;
@@ -696,7 +717,7 @@ public final class CronExpression implements Serializable, Cloneable {
                 i = checkNext(i, s, val, type);
                 return i;
             }
-        } else {
+        } else { // 无效字符
             throw new ParseException("Unexpected character: " + c, i);
         }
 
@@ -723,13 +744,13 @@ public final class CronExpression implements Serializable, Cloneable {
         int end = -1;
         int i = pos;
 
-        if (i >= s.length()) {
+        if (i >= s.length()) { //单纯的多位数
             addToSet(val, end, -1, type);
             return i;
         }
 
         char c = s.charAt(pos);
-
+        // 每个月最后一个星期val
         if (c == 'L') {
             if (type == DAY_OF_WEEK) {
                 if(val < 1 || val > 7)
@@ -743,7 +764,7 @@ public final class CronExpression implements Serializable, Cloneable {
             i++;
             return i;
         }
-        
+        // 这个月距离val号最近的工作日
         if (c == 'W') {
             if (type == DAY_OF_MONTH) {
                 nearestWeekday = true;
@@ -757,7 +778,7 @@ public final class CronExpression implements Serializable, Cloneable {
             i++;
             return i;
         }
-
+        // 这个月第几周的周val
         if (c == '#') {
             if (type != DAY_OF_WEEK) {
                 throw new ParseException("'#' option is not valid here. (pos=" + i + ")", i);
@@ -779,7 +800,7 @@ public final class CronExpression implements Serializable, Cloneable {
             i++;
             return i;
         }
-
+        // 区间范围解析
         if (c == '-') {
             i++;
             c = s.charAt(i);
@@ -821,7 +842,7 @@ public final class CronExpression implements Serializable, Cloneable {
                 return i;
             }
         }
-
+        // 间隔递增值范围解析
         if (c == '/') {
             if ((i + 1) >= s.length() || s.charAt(i + 1) == ' ' || s.charAt(i + 1) == '\t') {
                 throw new ParseException("'/' must be followed by an integer.", i);
@@ -966,9 +987,9 @@ public final class CronExpression implements Serializable, Cloneable {
 
     protected void addToSet(int val, int end, int incr, int type)
         throws ParseException {
-        
+        // 获取对应容器
         TreeSet<Integer> set = getSet(type);
-
+        // 校验参数的有效性
         if (type == SECOND || type == MINUTE) {
             if ((val < 0 || val > 59 || end > 59) && (val != ALL_SPEC_INT)) {
                 throw new ParseException(
@@ -998,7 +1019,7 @@ public final class CronExpression implements Serializable, Cloneable {
                         "Day-of-Week values must be between 1 and 7", -1);
             }
         }
-
+        // 处理非*且无递增值的情况
         if ((incr == 0 || incr == -1) && val != ALL_SPEC_INT) {
             if (val != -1) {
                 set.add(val);
@@ -1011,12 +1032,12 @@ public final class CronExpression implements Serializable, Cloneable {
 
         int startAt = val;
         int stopAt = end;
-
+        // 处理*且无递增值的情况
         if (val == ALL_SPEC_INT && incr <= 0) {
             incr = 1;
             set.add(ALL_SPEC); // put in a marker, but also fill values
         }
-
+        // 解析各个时间部分的配置
         if (type == SECOND || type == MINUTE) {
             if (stopAt == -1) {
                 stopAt = 59;
