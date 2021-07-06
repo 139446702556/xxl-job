@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by xuxueli on 17/3/10.
+ * 轮询
  */
 public class ExecutorRouteRound extends ExecutorRouter {
 
@@ -20,11 +21,12 @@ public class ExecutorRouteRound extends ExecutorRouter {
 
     private static int count(int jobId) {
         // cache clear
+        // 一天清除缓存一次
         if (System.currentTimeMillis() > CACHE_VALID_TIME) {
             routeCountEachJob.clear();
             CACHE_VALID_TIME = System.currentTimeMillis() + 1000*60*60*24;
         }
-
+        // 获取jobid对应的轮询数
         AtomicInteger count = routeCountEachJob.get(jobId);
         if (count == null || count.get() > 1000000) {
             // 初始化时主动Random一次，缓解首次压力

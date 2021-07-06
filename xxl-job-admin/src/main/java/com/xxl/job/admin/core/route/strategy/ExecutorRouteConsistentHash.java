@@ -60,6 +60,7 @@ public class ExecutorRouteConsistentHash extends ExecutorRouter {
 
         // ------A1------A2-------A3------
         // -----------J1------------------
+        // 初始化一致性hash表，每个节点对应一百个虚拟节点
         TreeMap<Long, String> addressRing = new TreeMap<Long, String>();
         for (String address: addressList) {
             for (int i = 0; i < VIRTUAL_NODE_NUM; i++) {
@@ -67,9 +68,11 @@ public class ExecutorRouteConsistentHash extends ExecutorRouter {
                 addressRing.put(addressHash, address);
             }
         }
-
+        //计算jobid对应hash值
         long jobHash = hash(String.valueOf(jobId));
+        // 获取大于等于jobhash的全部数据（按照升序）
         SortedMap<Long, String> lastRing = addressRing.tailMap(jobHash);
+
         if (!lastRing.isEmpty()) {
             return lastRing.get(lastRing.firstKey());
         }
