@@ -11,13 +11,15 @@ import java.util.List;
 
 /**
  * Created by xuxueli on 17/3/10.
+ * 故障转移
  */
 public class ExecutorRouteFailover extends ExecutorRouter {
 
     @Override
     public ReturnT<String> route(TriggerParam triggerParam, List<String> addressList) {
-
+        // 记录异常信息
         StringBuffer beatResultSB = new StringBuffer();
+        // 遍历注册表上的全部地址，直到找到第一个有效地址时返回
         for (String address : addressList) {
             // beat
             ReturnT<String> beatResult = null;

@@ -25,12 +25,14 @@ public class ExecutorRouteLRU extends ExecutorRouter {
     public String route(int jobId, List<String> addressList) {
 
         // cache clear
+        // 每天清理一次lru表
         if (System.currentTimeMillis() > CACHE_VALID_TIME) {
             jobLRUMap.clear();
             CACHE_VALID_TIME = System.currentTimeMillis() + 1000*60*60*24;
         }
 
         // init lru
+        // 初始化lru表
         LinkedHashMap<String, String> lruItem = jobLRUMap.get(jobId);
         if (lruItem == null) {
             /**
@@ -38,17 +40,20 @@ public class ExecutorRouteLRU extends ExecutorRouter {
              *      a、accessOrder：true=访问顺序排序（get/put时排序）；false=插入顺序排期；
              *      b、removeEldestEntry：新增元素时将会调用，返回true时会删除最老元素；可封装LinkedHashMap并重写该方法，比如定义最大容量，超出是返回true即可实现固定长度的LRU算法；
              */
+            // 按照get put访问进行排序，被访问过的节点会被放到链表的最后面（及最前面的节点是最近最久未使用的）
             lruItem = new LinkedHashMap<String, String>(16, 0.75f, true);
             jobLRUMap.putIfAbsent(jobId, lruItem);
         }
 
         // put new
+        // 添加新地址到lru表中
         for (String address: addressList) {
             if (!lruItem.containsKey(address)) {
                 lruItem.put(address, address);
             }
         }
         // remove old
+        // 移除无效地址
         List<String> delKeys = new ArrayList<>();
         for (String existKey: lruItem.keySet()) {
             if (!addressList.contains(existKey)) {
@@ -62,6 +67,7 @@ public class ExecutorRouteLRU extends ExecutorRouter {
         }
 
         // load
+        // 获取最近最久非使用的节点
         String eldestKey = lruItem.entrySet().iterator().next().getKey();
         String eldestValue = lruItem.get(eldestKey);
         return eldestValue;

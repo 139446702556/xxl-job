@@ -12,12 +12,14 @@ import java.util.List;
 
 /**
  * Created by xuxueli on 17/3/10.
+ * 忙碌转移
  */
 public class ExecutorRouteBusyover extends ExecutorRouter {
 
     @Override
     public ReturnT<String> route(TriggerParam triggerParam, List<String> addressList) {
         StringBuffer idleBeatResultSB = new StringBuffer();
+        // 遍历注册表中的全部地址，直到找到一个未正在执行当前任务的服务器时，返回使用；如果不存在，则终止任务执行
         for (String address : addressList) {
             // beat
             ReturnT<String> idleBeatResult = null;

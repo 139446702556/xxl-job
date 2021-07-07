@@ -23,6 +23,7 @@ public class ExecutorRouteConsistentHash extends ExecutorRouter {
 
     /**
      * get hash code on 2^32 ring (md5散列的方式计算hash值)
+     * 计算key的md5散列值，并截取后32位作为此key的hash值
      * @param key
      * @return
      */
@@ -72,7 +73,7 @@ public class ExecutorRouteConsistentHash extends ExecutorRouter {
         long jobHash = hash(String.valueOf(jobId));
         // 获取大于等于jobhash的全部数据（按照升序）
         SortedMap<Long, String> lastRing = addressRing.tailMap(jobHash);
-
+        // 获取满足条件离当前hash值最近的虚拟节点 （如果大于所有虚拟节点则环形 回到开头节点）
         if (!lastRing.isEmpty()) {
             return lastRing.get(lastRing.firstKey());
         }
