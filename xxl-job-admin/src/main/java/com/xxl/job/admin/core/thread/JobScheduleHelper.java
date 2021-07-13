@@ -72,7 +72,7 @@ public class JobScheduleHelper {
                         conn = XxlJobAdminConfig.getAdminConfig().getDataSource().getConnection();
                         connAutoCommit = conn.getAutoCommit();
                         conn.setAutoCommit(false);
-                        // 获取调度锁
+                        // 获取调度锁 (此处为了保证多个服务时（集群），每个任务同一时刻只被一个服务执行；可能会造成锁资源竞争、锁等待问题)
                         preparedStatement = conn.prepareStatement(  "select * from xxl_job_lock where lock_name = 'schedule_lock' for update" );
                         preparedStatement.execute();
 

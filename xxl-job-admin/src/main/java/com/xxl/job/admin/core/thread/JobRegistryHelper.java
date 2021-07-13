@@ -109,7 +109,7 @@ public class JobRegistryHelper {
 								}
 								group.setAddressList(addressListStr);
 								group.setUpdateTime(new Date());
-
+								// 此处多个服务（集群）同时运行时可能会造成死锁问题
 								XxlJobAdminConfig.getAdminConfig().getXxlJobGroupDao().update(group);
 							}
 						}
