@@ -57,7 +57,7 @@ public class ScriptJobHandler extends IJobHandler {
         String cmd = glueType.getCmd();
 
         // make script file
-        //检测脚本文件是否存在，不存在则创建
+        //检测脚本文件是否存在，不存在则创建(此处才将存储在mysql中的源程序保存到jobid对应的文件中)
         String scriptFileName = XxlJobFileAppender.getGlueSrcPath()
                 .concat(File.separator)
                 .concat(String.valueOf(jobId))

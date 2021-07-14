@@ -69,6 +69,7 @@ public class JobCodeController {
 		}
 		
 		// update new code
+		// 修改job info表中的脚本信息
 		exists_jobInfo.setGlueSource(glueSource);
 		exists_jobInfo.setGlueRemark(glueRemark);
 		exists_jobInfo.setGlueUpdatetime(new Date());
@@ -77,6 +78,7 @@ public class JobCodeController {
 		xxlJobInfoDao.update(exists_jobInfo);
 
 		// log old code
+		// 保存脚本修改记录
 		XxlJobLogGlue xxlJobLogGlue = new XxlJobLogGlue();
 		xxlJobLogGlue.setJobId(exists_jobInfo.getId());
 		xxlJobLogGlue.setGlueType(exists_jobInfo.getGlueType());
@@ -88,6 +90,7 @@ public class JobCodeController {
 		xxlJobLogGlueDao.save(xxlJobLogGlue);
 
 		// remove code backup more than 30
+		// 只保存最近三十份修改记录，清除其他无用记录
 		xxlJobLogGlueDao.removeOld(exists_jobInfo.getId(), 30);
 
 		return ReturnT.SUCCESS;
